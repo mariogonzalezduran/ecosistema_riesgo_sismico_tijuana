@@ -1,0 +1,63 @@
+{
+  "fuente": "shm/sim.js (TIJUANA_SITES). Coordenadas tomadas de Google Maps; verificar en sitio.",
+  "instrumentos_por_plantel": [
+    "1 unidad SHM (3 sensores a 150 Hz)",
+    "1 P-Alert (1 sensor en el suelo a 100 Hz)"
+  ],
+  "planteles": [
+    {
+      "clave": "lapresa",
+      "nombre": "COBACH Plantel La Presa",
+      "lat": 32.4395287,
+      "lon": -116.9259885
+    },
+    {
+      "clave": "lapresa_ext",
+      "nombre": "COBACH Extensión La Presa · Parajes del Valle",
+      "lat": 32.5140318,
+      "lon": -116.7457632
+    },
+    {
+      "clave": "florido",
+      "nombre": "COBACH El Florido",
+      "lat": 32.4633484,
+      "lon": -116.8756854
+    },
+    {
+      "clave": "sigloxxi",
+      "nombre": "COBACH Siglo XXI",
+      "lat": 32.4858367,
+      "lon": -117.0508718
+    },
+    {
+      "clave": "lamesa",
+      "nombre": "COBACH La Mesa",
+      "lat": 32.4597458,
+      "lon": -116.9335433
+    },
+    {
+      "clave": "nuevatij",
+      "nombre": "COBACH Nueva Tijuana",
+      "lat": 32.4816663,
+      "lon": -116.9257064
+    },
+    {
+      "clave": "vizcaino",
+      "nombre": "COBACH Mtro. Rubén Vizcaíno",
+      "lat": 32.512584,
+      "lon": -116.9694802
+    },
+    {
+      "clave": "tijuana",
+      "nombre": "COBACH Plantel Tijuana",
+      "lat": 32.4708013,
+      "lon": -116.8420676
+    },
+    {
+      "clave": "rosarito",
+      "nombre": "COBACH Primer Ayuntamiento Playas de Rosarito",
+      "lat": 32.3843751,
+      "lon": -117.0591394
+    }
+  ]
+}

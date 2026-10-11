@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ecosistema de riesgo sísmico en la zona metropolitana de Tijuana</title>
+<meta name="description" content="Tablero del ecosistema de riesgo sísmico en la zona metropolitana de Tijuana: riesgo, vibración y suelo, estaciones MEMS, mapas de aceleración, inspección de infraestructura social y difusión.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="vibracion/vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg width="54" height="22" viewBox="0 0 54 22" aria-hidden="true"><path d="M0 11h12l2-3 2 6 3-12 3 18 3-14 2 8 2-5 2 2h21" fill="none" style="stroke:var(--accent)" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      <h1>Ecosistema de riesgo sísmico en la zona metropolitana de Tijuana</h1>
+      <span class="sub">RMS-ZC-BC · FCITEC-UABC</span>
+      <span class="state" id="dstate">Cargando datos…</span>
+    </div>
+    <nav class="chain" id="nav" aria-label="Componentes del ecosistema"></nav>
+  </div>
+</div>
+<main class="wrap">
+  <div id="banner" hidden></div>
+  <div id="view" style="display:flex;flex-direction:column;gap:18px"></div>
+  <div id="hold" hidden></div>
+  <section id="visor" class="card" hidden>
+    <header><h2>Vibración ambiental: lecturas del proyecto</h2><a class="btn ghost sm" href="vibracion/index.html" target="_blank" rel="noopener">Abrir el visor completo</a></header>
+    <p class="hint">Frecuencia y periodo predominantes medidos en campo por el proyecto RMS-ZC-BC. El color indica el intervalo del valor medido; no es una categoría de riesgo sísmico.</p>
+    <div class="grid g4" id="vibKpis"></div>
+    <div class="filters" id="vibCtl"></div>
+    <div class="vibmap" id="vibMap" role="region" aria-label="Mapa de puntos de vibración ambiental"></div>
+    <div id="vibLeg"></div>
+    <details id="vibTab"><summary>Ver las lecturas como tabla</summary><div class="scroll" id="vibTabBody"></div></details>
+    <p class="src" id="vibSrc"></p>
+  </section>
+  <section id="shmPanel" class="card" hidden>
+    <header><h2>Red SHM + P-Alert: panel de monitoreo</h2><a class="btn sm" href="shm/index.html" target="_blank" rel="noopener">Abrir el panel (simulado)</a></header>
+    <p class="note-sim"><b>Datos simulados.</b> El panel de monitoreo genera sus señales en el navegador; ninguna proviene todavía de sensores reales.</p>
+    <div class="grid g4" id="shmKpis"></div>
+    <div class="grid g2">
+      <div class="vibmap shmmap" id="shmMap" role="region" aria-label="Mapa de planteles previstos para la red SHM + P-Alert"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        <h3>Qué hace el panel</h3>
+        <ul class="plain">
+          <li>Señal unificada de los 3 sensores de cada unidad SHM, con descarte del sensor que se desvía</li>
+          <li>Detección STA/LTA y por umbral de aceleración en gal, con detección de red al disparar 3 o más estaciones</li>
+          <li>Espectro y frecuencia dominante, y salud de la transmisión de cada estación</li>
+          <li>Simulador de sismos con ondas P y S, y alerta temprana por sitio</li>
+          <li>Epicentros publicados por el USGS; la red no calcula epicentros</li>
+        </ul>
+        <div class="scroll" id="shmList"></div>
+      </div>
+    </div>
+    <p class="src" id="shmSrc">Fuente: repositorio SHM_GPS_NETWORK_DASH_elite (FCITEC-UABC). El panel también simula 32 edificios en Guerrero (UAGro).</p>
+  </section>
+</main>
+<footer class="wrap">
+  Cifras de contexto tomadas de la propuesta UABC 351/6/C/49/26 (red acelerométrica de bajo costo), el protocolo UABC 351/4390 (instrumentación MEMS) y el protocolo SECIHTI 2026 (sistema integral de monitoreo). El mapa de aceleración de esta página interpola entre estaciones por distancia inversa y es una aproximación visual; no sustituye a ShakeMap.
+</footer>
+<div id="tip" hidden></div>
+<div id="toast" hidden role="status"></div>
+<script src="vibracion/vendor/leaflet/leaflet.js"></script>
+<script src="vibracion/js/config.js"></script>
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

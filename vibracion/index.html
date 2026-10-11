@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RMS-ZC-BC | Vibración ambiental en Tijuana</title>
+  <meta name="description" content="Visor de puntos de medición de vibración ambiental en Tijuana, Baja California. Red de Monitoreo Sísmico de la Zona Costa de Baja California, FCITEC-UABC.">
+
+  <!-- Tipografías. Si se prefiere no depender de Google Fonts, se pueden borrar estas tres líneas:
+       el sitio usará las tipografías alternas definidas en css/estilos.css. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<a class="salto" href="#visor">Saltar al mapa</a>
+
+<header class="encabezado">
+  <div class="encabezado-marca">
+    <!-- LOGOTIPOS oficiales: img/logo-uabc.png e img/logo-fcitec.png (aquí y en el pie). -->
+    <div class="logos">
+      <img class="logo" src="img/logo-uabc.png" alt="Universidad Autónoma de Baja California">
+      <img class="logo" src="img/logo-fcitec.png" alt="Facultad de Ciencias de la Ingeniería y Tecnología">
+    </div>
+    <div class="marca-texto">
+      <div class="marca-sigla">RMS-ZC-BC <span class="marca-inst">| FCITEC-UABC</span></div>
+      <div class="marca-nombre">Red de Monitoreo Sísmico de la Zona Costa de Baja California</div>
+    </div>
+  </div>
+  <nav class="navegacion" aria-label="Secciones">
+    <a href="#visor" aria-current="location">Visor</a>
+    <a href="#metodologia">Metodología</a>
+    <a href="#datos">Datos</a>
+    <a href="#contacto">Contacto</a>
+  </nav>
+</header>
+
+<main>
+
+  <section class="presentacion" aria-labelledby="titulo-pagina">
+    <div class="presentacion-texto">
+      <h1 id="titulo-pagina">Vibración ambiental en Tijuana</h1>
+      <p class="intro-larga">Este visor reúne los puntos donde se midió vibración ambiental en Tijuana, Baja California. Selecciona un punto para consultar su frecuencia y periodo predominantes, la fecha de medición y el archivo de origen.</p>
+      <p class="intro-corta">Toca un punto para ver su frecuencia y periodo predominantes, la fecha de medición y el archivo de origen.</p>
+      <!-- Nota automática (js/app.js): fecha de la medición más reciente y número de puntos. -->
+      <p id="actualizacion" class="actualizacion" hidden></p>
+    </div>
+    <p class="aviso-demo" data-demo><strong>Datos de demostración.</strong> Los puntos y valores que aparecen son ficticios y solo ilustran el diseño. No corresponden a mediciones reales.</p>
+  </section>
+
+  <section id="visor" class="visor" aria-label="Visor de puntos de medición">
+
+    <div class="busqueda">
+      <label for="buscar" class="rotulo">Buscar por identificador</label>
+      <div class="busqueda-fila">
+        <input id="buscar" type="search" autocomplete="off" spellcheck="false" placeholder="Ej. 14">
+        <button id="abrir-filtros" class="boton-icono solo-movil" type="button" aria-label="Abrir filtros y leyenda" aria-controls="panel" aria-expanded="false">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <aside id="panel" class="panel" aria-label="Filtros y leyenda">
+      <div class="hoja-asa solo-movil" aria-hidden="true"></div>
+      <div class="panel-cabecera solo-movil">
+        <h2 class="hoja-titulo">Filtros y leyenda</h2>
+        <button id="cerrar-filtros" class="boton-cerrar" type="button" aria-label="Cerrar filtros">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <div class="grupo">
+        <div class="grupo-cabecera">
+          <h2 class="rotulo">Filtrar puntos</h2>
+          <button id="restablecer" class="boton boton-secundario boton-chico solo-escritorio" type="button">Restablecer</button>
+        </div>
+        <div class="campo-rango">
+          <div class="campo-rango-titulo">Frecuencia predominante (Hz)</div>
+          <div class="campo-rango-fila">
+            <input id="f-min" type="number" inputmode="decimal" step="0.1" min="0" placeholder="mín." aria-label="Frecuencia mínima en hertz">
+            <input id="f-max" type="number" inputmode="decimal" step="0.1" min="0" placeholder="máx." aria-label="Frecuencia máxima en hertz">
+          </div>
+        </div>
+        <div class="campo-rango">
+          <div class="campo-rango-titulo">Periodo predominante (s)</div>
+          <div class="campo-rango-fila">
+            <input id="t-min" type="number" inputmode="decimal" step="0.01" min="0" placeholder="mín." aria-label="Periodo mínimo en segundos">
+            <input id="t-max" type="number" inputmode="decimal" step="0.01" min="0" placeholder="máx." aria-label="Periodo máximo en segundos">
+          </div>
+        </div>
+      </div>
+
+      <div class="grupo">
+        <h2 class="rotulo">Colorear por</h2>
+        <div class="segmentado" role="group" aria-label="Variable para colorear los puntos">
+          <button type="button" data-variable="frecuencia" aria-pressed="true">Frecuencia</button>
+          <button type="button" data-variable="periodo" aria-pressed="false">Periodo</button>
+        </div>
+        <div class="leyenda">
+          <div class="leyenda-cabecera"><span id="leyenda-titulo">Frecuencia predominante (Hz)</span><span class="leyenda-n">puntos</span></div>
+          <ul id="leyenda-lista" class="leyenda-lista"></ul>
+          <p class="nota">El color indica el valor medido en cada punto. No representa niveles de riesgo.</p>
+        </div>
+      </div>
+
+      <div class="grupo grupo-lista">
+        <div class="grupo-cabecera">
+          <h2 class="rotulo">Puntos en el mapa</h2>
+          <output id="conteo" class="conteo" aria-live="polite"></output>
+        </div>
+        <ul id="lista" class="lista"></ul>
+        <p id="lista-vacia" class="lista-vacia" hidden>Sin coincidencias. Revisa el identificador o amplía los intervalos.</p>
+      </div>
+
+      <div class="panel-pie solo-movil">
+        <button id="restablecer-movil" class="boton boton-secundario" type="button">Restablecer</button>
+        <button id="ver-puntos" class="boton boton-primario" type="button">Ver puntos</button>
+      </div>
+    </aside>
+
+    <div class="mapa-marco">
+      <div id="mapa" role="application" aria-label="Mapa de puntos de medición"></div>
+
+      <div class="chip-demo" data-demo>Datos de demostración · valores ficticios</div>
+
+      <div class="leyenda-compacta solo-movil" aria-hidden="true">
+        <div id="compacta-titulo" class="compacta-titulo"></div>
+        <div id="compacta-barra" class="compacta-barra"></div>
+        <div id="compacta-marcas" class="compacta-marcas"></div>
+      </div>
+
+      <section id="detalle" class="detalle" aria-label="Detalle del punto seleccionado" aria-live="polite" hidden>
+        <div class="hoja-asa solo-movil" aria-hidden="true"></div>
+        <div class="detalle-cabecera">
+          <div>
+            <div class="rotulo">Punto de medición</div>
+            <div class="detalle-id"><span id="d-color" class="muestra"></span><span id="d-id"></span></div>
+          </div>
+          <button id="cerrar-detalle" class="boton-cerrar" type="button" aria-label="Cerrar detalle">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <div class="detalle-valores">
+          <div class="valor"><div class="valor-rotulo">Frecuencia predominante</div><div class="valor-numero"><span id="d-f"></span> <span class="unidad" id="d-f-u">Hz</span></div></div>
+          <div class="valor"><div class="valor-rotulo">Periodo predominante</div><div class="valor-numero"><span id="d-t"></span> <span class="unidad" id="d-t-u">s</span></div></div>
+        </div>
+        <dl class="detalle-filas">
+          <div><dt>Fecha de medición</dt><dd id="d-fecha"></dd></div>
+          <div><dt>Latitud</dt><dd id="d-lat" class="mono"></dd></div>
+          <div><dt>Longitud</dt><dd id="d-lon" class="mono"></dd></div>
+          <div><dt>Nombre del archivo</dt><dd id="d-archivo" class="mono"></dd></div>
+        </dl>
+        <div id="d-vecinos" class="detalle-vecinos" hidden>
+          <div class="valor-rotulo">Otras mediciones en este mismo sitio</div>
+          <div id="d-vecinos-lista" class="detalle-vecinos-lista"></div>
+        </div>
+        <p class="aviso-demo aviso-chico" data-demo>Dato de demostración. No corresponde a una medición real.</p>
+      </section>
+
+      <div id="sin-resultados" class="tarjeta-mapa" role="status" hidden>
+        <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5M8.5 11h5"/></svg>
+        <h2>Ningún punto coincide</h2>
+        <p id="sin-resultados-texto"></p>
+        <button id="limpiar" class="boton boton-primario" type="button">Limpiar búsqueda y filtros</button>
+      </div>
+
+      <div id="aviso-carga" class="tarjeta-mapa" role="alert" hidden>
+        <h2>No se pudieron cargar los puntos</h2>
+        <p id="aviso-carga-texto"></p>
+      </div>
+    </div>
+
+  </section>
+
+  <section id="metodologia" class="seccion">
+    <div class="contenedor">
+      <div class="seccion-cabecera">
+        <div class="antetitulo">Metodología y alcance</div>
+        <h2>Qué muestran estas mediciones</h2>
+      </div>
+      <div class="columnas">
+        <div class="columna">
+          <h3>Qué se midió</h3>
+          <p>Cada punto corresponde a un registro de vibración ambiental tomado en un sitio de la zona urbana de Tijuana. De cada registro se reporta la frecuencia predominante en hertz y el periodo predominante en segundos.</p>
+          <!-- PENDIENTE: sustituir cada [TEXTO ENTRE CORCHETES] con la información del proyecto. -->
+          <dl class="ficha">
+            <div><dt>Equipo</dt><dd><span class="pendiente">[INSTRUMENTO Y SENSOR]</span></dd></div>
+            <div><dt>Duración del registro</dt><dd><span class="pendiente">[DURACIÓN]</span></dd></div>
+            <div><dt>Procesamiento</dt><dd><span class="pendiente">[MÉTODO]</span></dd></div>
+            <div><dt>Campaña</dt><dd><span class="pendiente">[FECHAS]</span></dd></div>
+          </dl>
+        </div>
+        <div class="columna">
+          <h3>Cómo leer el mapa</h3>
+          <p>Cada círculo es un punto de medición. Su color indica el intervalo de la variable elegida en “Colorear por”, y la leyenda muestra los intervalos con sus unidades.</p>
+          <p>Frecuencia y periodo describen la misma medición: el periodo es el inverso de la frecuencia, <span class="mono">T = 1 / f</span>. Un punto de 2.0 Hz tiene un periodo de 0.50 s.</p>
+        </div>
+        <div class="columna">
+          <h3>Alcance y límites</h3>
+          <p>Los valores describen el sitio y la fecha de cada medición. El visor no interpola entre puntos ni estima valores donde no se midió.</p>
+          <p>La frecuencia y el periodo predominantes no son categorías de riesgo sísmico. Este visor no clasifica el riesgo y no sustituye un estudio de sitio.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="datos" class="seccion seccion-blanca">
+    <div class="contenedor dos-columnas">
+
+      <div class="bloque-datos">
+        <div class="seccion-cabecera">
+          <div class="antetitulo">Datos</div>
+          <h2>Sobre los datos</h2>
+        </div>
+        <!-- Decisión del proyecto: las mediciones no se ofrecen para descarga. -->
+        <p class="datos-texto">Este visor muestra <span id="total-puntos"></span> puntos de medición. Las mediciones se consultan en el mapa; no se ofrecen para descarga.</p>
+        <dl class="ficha">
+          <div><dt>Licencia de uso</dt><dd><span class="pendiente">[LICENCIA POR DEFINIR]</span></dd></div>
+          <div><dt>Cómo citar</dt><dd><span class="pendiente">[CITA SUGERIDA]</span></dd></div>
+        </dl>
+      </div>
+
+      <div id="contacto" class="bloque-contacto">
+        <div class="seccion-cabecera">
+          <div class="antetitulo">Contacto</div>
+          <h2>Consultas sobre el proyecto</h2>
+        </div>
+        <dl class="ficha ficha-apilada">
+          <div><dt>Responsable</dt><dd><span class="pendiente">[NOMBRE Y CARGO]</span></dd></div>
+          <div><dt>Correo</dt><dd><span class="pendiente">[CORREO INSTITUCIONAL]</span></dd></div>
+          <div><dt>Unidad académica</dt><dd>Facultad de Ciencias de la Ingeniería y Tecnología, Universidad Autónoma de Baja California</dd></div>
+          <div><dt>Dirección</dt><dd><span class="pendiente">[DIRECCIÓN]</span></dd></div>
+        </dl>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer class="pie">
+  <div class="pie-marca">
+    <div class="logos">
+      <img class="logo" src="img/logo-uabc.png" alt="Universidad Autónoma de Baja California">
+      <img class="logo" src="img/logo-fcitec.png" alt="Facultad de Ciencias de la Ingeniería y Tecnología">
+    </div>
+    <div class="pie-texto">Facultad de Ciencias de la Ingeniería y Tecnología<br>Universidad Autónoma de Baja California</div>
+  </div>
+  <div class="pie-version mono">RMS-ZC-BC · versión 0.3<span data-demo> · datos de demostración</span></div>
+</footer>
+
+<noscript><p class="sin-js">Este visor necesita JavaScript para mostrar el mapa.</p></noscript>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

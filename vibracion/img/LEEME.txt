@@ -1,0 +1,13 @@
+Logotipos oficiales del sitio.
+
+     logo-uabc.png     Escudo de la UABC. Copia reducida (176 x 240 px) de Escudo_UABC.png,
+                       sin otros cambios, para que cargue rápido.
+     logo-fcitec.png   Logotipo de FCITEC. Copia sin cambios de LOGO-VERDE-GRIS.png.
+
+Se usan en index.html dos veces: en el encabezado y en el pie de página.
+
+Los logotipos se muestran dentro de un recuadro blanco (variable --logo-fondo en
+css/estilos.css), porque el de FCITEC tiene letras gris oscuro que no se leen sobre el azul.
+La altura se ajusta sola: 44 px en laptop y 36 px en celular, recuadro incluido.
+
+No usar Logo_FCA_UABC.png: incluye el logotipo de la Facultad de Ciencias Administrativas.

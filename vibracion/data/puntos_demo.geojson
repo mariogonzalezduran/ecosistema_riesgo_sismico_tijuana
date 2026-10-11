@@ -1,0 +1,31 @@
+{
+  "type": "FeatureCollection",
+  "name": "puntos_demo",
+  "descripcion": "DATOS DE DEMOSTRACION. Puntos y valores ficticios, generados solo para mostrar el diseno del visor RMS-ZC-BC. No corresponden a mediciones reales.",
+  "features": [
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-117.1050, 32.5290] }, "properties": { "id": "DEMO-001", "fecha": "2025-02-11", "archivo": "demo_001.dat", "frecuencia_hz": 1.2, "periodo_s": 0.83, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-117.0920, 32.5180] }, "properties": { "id": "DEMO-002", "fecha": "2025-02-11", "archivo": "demo_002.dat", "frecuencia_hz": 2.4, "periodo_s": 0.42, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-117.0610, 32.5310] }, "properties": { "id": "DEMO-003", "fecha": "2025-02-12", "archivo": "demo_003.dat", "frecuencia_hz": 0.8, "periodo_s": 1.25, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-117.0340, 32.5240] }, "properties": { "id": "DEMO-004", "fecha": "2025-02-12", "archivo": "demo_004.dat", "frecuencia_hz": 0.6, "periodo_s": 1.67, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-117.0180, 32.5120] }, "properties": { "id": "DEMO-005", "fecha": "2025-02-18", "archivo": "demo_005.dat", "frecuencia_hz": 0.9, "periodo_s": 1.11, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-117.0700, 32.5010] }, "properties": { "id": "DEMO-006", "fecha": "2025-02-18", "archivo": "demo_006.dat", "frecuencia_hz": 3.6, "periodo_s": 0.28, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-117.0410, 32.4950] }, "properties": { "id": "DEMO-007", "fecha": "2025-02-19", "archivo": "demo_007.dat", "frecuencia_hz": 5.2, "periodo_s": 0.19, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-116.9900, 32.5060] }, "properties": { "id": "DEMO-008", "fecha": "2025-02-19", "archivo": "demo_008.dat", "frecuencia_hz": 1.5, "periodo_s": 0.67, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-116.9750, 32.5270] }, "properties": { "id": "DEMO-009", "fecha": "2025-02-25", "archivo": "demo_009.dat", "frecuencia_hz": 2.1, "periodo_s": 0.48, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-116.9480, 32.5390] }, "properties": { "id": "DEMO-010", "fecha": "2025-02-25", "archivo": "demo_010.dat", "frecuencia_hz": 1.1, "periodo_s": 0.91, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-116.9420, 32.5150] }, "properties": { "id": "DEMO-011", "fecha": "2025-02-26", "archivo": "demo_011.dat", "frecuencia_hz": 4.4, "periodo_s": 0.23, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-116.9650, 32.4930] }, "properties": { "id": "DEMO-012", "fecha": "2025-02-26", "archivo": "demo_012.dat", "frecuencia_hz": 2.8, "periodo_s": 0.36, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-117.0050, 32.4790] }, "properties": { "id": "DEMO-013", "fecha": "2025-03-04", "archivo": "demo_013.dat", "frecuencia_hz": 6.3, "periodo_s": 0.16, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-117.0460, 32.4720] }, "properties": { "id": "DEMO-014", "fecha": "2025-03-04", "archivo": "demo_014.dat", "frecuencia_hz": 8.5, "periodo_s": 0.12, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-117.0240, 32.4580] }, "properties": { "id": "DEMO-015", "fecha": "2025-03-05", "archivo": "demo_015.dat", "frecuencia_hz": 7.1, "periodo_s": 0.14, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-116.9820, 32.4640] }, "properties": { "id": "DEMO-016", "fecha": "2025-03-05", "archivo": "demo_016.dat", "frecuencia_hz": 3.2, "periodo_s": 0.31, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-116.9350, 32.4810] }, "properties": { "id": "DEMO-017", "fecha": "2025-03-11", "archivo": "demo_017.dat", "frecuencia_hz": 1.8, "periodo_s": 0.56, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-116.9080, 32.5020] }, "properties": { "id": "DEMO-018", "fecha": "2025-03-11", "archivo": "demo_018.dat", "frecuencia_hz": 0.7, "periodo_s": 1.43, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-116.9050, 32.4690] }, "properties": { "id": "DEMO-019", "fecha": "2025-03-12", "archivo": "demo_019.dat", "frecuencia_hz": 2.6, "periodo_s": 0.38, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-116.9500, 32.4460] }, "properties": { "id": "DEMO-020", "fecha": "2025-03-12", "archivo": "demo_020.dat", "frecuencia_hz": 5.8, "periodo_s": 0.17, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-116.9930, 32.4390] }, "properties": { "id": "DEMO-021", "fecha": "2025-03-18", "archivo": "demo_021.dat", "frecuencia_hz": 9.4, "periodo_s": 0.11, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-116.8850, 32.4520] }, "properties": { "id": "DEMO-022", "fecha": "2025-03-18", "archivo": "demo_022.dat", "frecuencia_hz": 4.0, "periodo_s": 0.25, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-116.8720, 32.4880] }, "properties": { "id": "DEMO-023", "fecha": "2025-03-19", "archivo": "demo_023.dat", "frecuencia_hz": 1.3, "periodo_s": 0.77, "demo": true } },
+    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-116.8790, 32.5180] }, "properties": { "id": "DEMO-024", "fecha": "2025-03-19", "archivo": "demo_024.dat", "frecuencia_hz": 3.0, "periodo_s": 0.33, "demo": true } }
+  ]
+}

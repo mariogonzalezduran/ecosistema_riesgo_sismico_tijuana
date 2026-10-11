@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>SIMULACIÓN · Red FCITEC-UABC · SHM + P-Alert</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Red FCITEC-UABC: simulación de monitoreo estructural (SHM) y acelerógrafos P-Alert en planteles COBACH de Tijuana y edificios de Guerrero." />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+  <link rel="stylesheet" href="./main.css" />
+</head>
+<body>
+  <div class="sim-banner" role="note">
+    <b>SIMULACIÓN</b> · Todos los datos, sensores y sismos se generan en este navegador. No provienen de instrumentos reales. Nombres y ubicaciones de planteles aproximados.
+  </div>
+
+  <header class="hero">
+    <div class="wrap">
+      <div class="brand-row">
+        <div class="brand-left">
+          <div class="logo-box" id="logoFcitec" data-logo="fcitec" data-text="FCITEC"></div>
+          <div class="brand-text">
+            <div class="eyebrow">FCITEC · Universidad Autónoma de Baja California · Demostración</div>
+            <h1>Red FCITEC-UABC</h1>
+            <p>Monitoreo SHM y P-Alert. Tijuana: 9 planteles COBACH con una unidad SHM y un P-Alert cada uno. Guerrero: 32 edificios con una unidad SHM, 8 de ellos en Chilpancingo. Las estaciones se colorean según la aceleración que registran.</p>
+          </div>
+        </div>
+        <div class="partner-logos">
+          <div class="logo-box small" id="logoUabc" data-logo="uabc" data-text="UABC"></div>
+          <div class="logo-box small" id="logoExtra" data-logo="colaborador" data-text=""></div>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi-label">Estaciones en línea</div>
+          <div class="kpi-value"><span id="kpiOnline">–</span></div>
+          <div class="kpi-sub" id="kpiOnlineSub">Iniciando…</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Muestras recibidas</div>
+          <div class="kpi-value"><span id="kpiRate">–</span><small> /s</small></div>
+          <div class="kpi-sub" id="kpiRateSub">–</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Retraso de los datos</div>
+          <div class="kpi-value"><span id="kpiLag">–</span></div>
+          <div class="kpi-sub" id="kpiLagSub">Estación seleccionada</div>
+        </div>
+        <div class="kpi kpi-acc" id="kpiAccBox">
+          <div class="kpi-label">Aceleración máxima (60 s)</div>
+          <div class="kpi-value"><span id="kpiAcc">–</span></div>
+          <div class="kpi-sub" id="kpiAccSub">–</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="statusbar">
+    <div class="wrap statusbar-inner">
+      <span class="dot ok" id="apiDot"></span>
+      <span id="apiStatus">Modo simulación</span>
+      <button class="linkbtn" id="btnLight" title="Reduce el trabajo del equipo: menos historial y menos sensores por estación. Útil en teléfonos."></button>
+      <span class="statusbar-right" id="apiMeta"></span>
+    </div>
+  </div>
+
+  <main class="wrap grid">
+    <!-- Mapa -->
+    <section class="card map-card">
+      <div class="card-head">
+        <div>
+          <h2>Mapa de la red</h2>
+          <p>Cada estación se colorea según la aceleración máxima que registró en el último minuto.</p>
+        </div>
+        <div class="controls">
+          <button class="btn" id="btnTij">Tijuana</button>
+          <button class="btn" id="btnGro">Guerrero</button>
+          <button class="btn" id="btnChilpo">Chilpancingo</button>
+          <button class="btn" id="btnFit">Todo</button>
+        </div>
+      </div>
+      <div id="map" role="region" aria-label="Mapa de estaciones"></div>
+      <div class="legend">
+        <span><i class="lg-shape">●</i>SHM</span>
+        <span><i class="lg-shape">◆</i>P-Alert</span>
+        <span class="lg-sep"></span>
+        <span><i class="st lvl-none"></i>Sin detección <small id="lgNone"></small></span>
+        <span><i class="st lvl-verde"></i>Verde <small id="lgVerde"></small></span>
+        <span><i class="st lvl-amarillo"></i>Amarillo <small id="lgAmarillo"></small></span>
+        <span><i class="st lvl-rojo"></i>Rojo <small id="lgRojo"></small></span>
+        <span><i class="st lvl-off"></i>Sin conexión</span>
+        <span><i class="lg-star">✶</i>Epicentro oficial (SSN/USGS)</span>
+      </div>
+    </section>
+
+    <!-- Detalle -->
+    <aside class="card detail-card">
+      <div class="card-head">
+        <div>
+          <div class="small-label" id="dKind">Estación seleccionada</div>
+          <h2 id="dName">–</h2>
+          <p id="dMeta">–</p>
+        </div>
+        <span class="badge" id="dBadge">–</span>
+      </div>
+      <ul class="reasons" id="dReasons"></ul>
+      <div class="metrics">
+        <div class="metric"><span>Última muestra</span><b id="dLast">–</b><em id="dLastAgo"></em></div>
+        <div class="metric"><span>Retraso</span><b id="dLag">–</b><em>del sensor al panel</em></div>
+        <div class="metric"><span>Muestreo real</span><b id="dFs">–</b><em id="dFsSub"></em></div>
+        <div class="metric"><span>Completitud</span><b id="dComp">–</b><em id="dCompSub"></em></div>
+        <div class="metric"><span>Aceleración actual</span><b id="dRms">–</b><em>pico de los últimos 10 s, sin gravedad</em></div>
+        <div class="metric"><span>Pico retenido</span><b id="dPga">–</b><em id="dPgaSub">últimos 60 s</em></div>
+        <div class="metric"><span id="dM7L">Frecuencia dominante</span><b id="dM7">–</b><em id="dM7Sub"></em></div>
+        <div class="metric"><span id="dM8L">Sensores reportando</span><b id="dM8">–</b><em id="dM8Sub"></em></div>
+      </div>
+      <div class="sensor-chips" id="dChips"></div>
+      <details class="raw">
+        <summary>Último registro recibido (JSON)</summary>
+        <pre id="dRaw">{}</pre>
+      </details>
+    </aside>
+
+    <!-- Simulador de sismos -->
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h2>Simulador de sismos</h2>
+          <p>Herramienta de demostración. Las ondas llegan a cada estación según su distancia. El epicentro solo aparece cuando llega el reporte oficial simulado, 45 s después.</p>
+        </div>
+      </div>
+      <div class="quake-form">
+        <label><span>Zona</span>
+          <select id="qNet"><option value="tijuana">Tijuana</option><option value="guerrero">Guerrero</option></select>
+        </label>
+        <label><span>Escenario</span><select id="qScenario"></select></label>
+        <label class="mag"><span>Magnitud <output id="qMagOut">5.5</output></span>
+          <input type="range" id="qMag" min="3" max="7.8" step="0.1" value="5.5" />
+        </label>
+        <div class="quake-actions">
+          <button class="btn primary big" id="btnQuake">Simular sismo</button>
+          <label class="check"><input type="checkbox" id="qAuto" checked /> <span>Sismos pequeños automáticos</span></label>
+          <span class="fine-inline" id="qAutoNext"></span>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="mini">
+          <thead><tr><th>Hora</th><th>Zona / escenario</th><th>M</th><th>Detección por umbral</th><th>Reporte oficial</th></tr></thead>
+          <tbody id="quakeList"><tr><td colspan="5">Todavía no hay sismos simulados.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Detección por umbral -->
+    <section class="card eew-card">
+      <div class="card-head">
+        <div>
+          <h2>Detección por umbral de aceleración</h2>
+          <p>Una estación detecta cuando supera el umbral. Aquí se ve en qué orden y con qué aceleración lo fueron haciendo.</p>
+        </div>
+        <div class="seg" role="tablist">
+          <button class="seg-btn active" data-net="tijuana" role="tab">Tijuana</button>
+          <button class="seg-btn" data-net="guerrero" role="tab">Guerrero</button>
+        </div>
+      </div>
+      <div class="thresholds">
+        <label><span>Detección desde</span><input type="number" id="thDet" min="1" step="1" /><em>gal</em></label>
+        <label><span><i class="st lvl-amarillo"></i>Amarillo desde</span><input type="number" id="thYellow" min="1" step="1" /><em>gal</em></label>
+        <label><span><i class="st lvl-rojo"></i>Rojo desde</span><input type="number" id="thRed" min="1" step="1" /><em>gal</em></label>
+        <button class="btn" id="btnThReset">Valores iniciales</button>
+        <label class="check"><input type="checkbox" id="showOfficial" checked /> <span>Epicentros oficiales</span></label>
+        <p class="fine-inline" id="thMsg" role="alert"></p>
+      </div>
+      <div id="detBox" class="eew"></div>
+    </section>
+
+    <!-- Señal -->
+    <section class="card span-2">
+      <div class="card-head">
+        <div>
+          <h2>Señal de aceleración en tiempo real</h2>
+          <p id="signalHint">Las gráficas avanzan solas conforme llegan los datos.</p>
+        </div>
+        <div class="controls">
+          <label><span>Vista</span><select id="signalMode"></select></label>
+          <label><span>Ventana</span>
+            <select id="signalWin">
+              <option value="10">10 s</option>
+              <option value="30" selected>30 s</option>
+              <option value="60">60 s</option>
+              <option value="120">2 min</option>
+            </select>
+          </label>
+          <label class="check"><input type="checkbox" id="signalCenter" checked /><span>Quitar gravedad</span></label>
+          <button class="btn" id="btnPause" aria-pressed="false">Pausar</button>
+        </div>
+      </div>
+      <div class="chart-box tall"><canvas id="signalChart"></canvas><div class="chart-empty" id="signalEmpty">Esperando datos…</div></div>
+    </section>
+
+    <!-- Espectro -->
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h2>Espectro de frecuencias</h2>
+          <p id="specHint">FFT con ventana Hann.</p>
+        </div>
+        <label class="controls"><span>Hasta</span>
+          <select id="specMax">
+            <option value="10">10 Hz</option>
+            <option value="25" selected>25 Hz</option>
+            <option value="50">50 Hz</option>
+          </select>
+        </label>
+      </div>
+      <div class="chart-box"><canvas id="specChart"></canvas><div class="chart-empty" id="specEmpty">Se necesitan unos segundos de señal continua.</div></div>
+    </section>
+
+    <!-- STA/LTA -->
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h2>Detección STA/LTA de la estación</h2>
+          <p>Detección complementaria sobre la señal unificada. Se marca en rojo cuando coincide con una detección de red (3 o más estaciones sobre el umbral).</p>
+        </div>
+      </div>
+      <div class="chart-box short"><canvas id="staltaChart"></canvas></div>
+      <div class="trigger-cfg">
+        <label><span>STA</span><input type="number" id="cfgSta" min="0.2" max="10" step="0.1" value="1" /><em>s</em></label>
+        <label><span>LTA</span><input type="number" id="cfgLta" min="5" max="120" step="1" value="20" /><em>s</em></label>
+        <label><span>Disparo</span><input type="number" id="cfgOn" min="1.5" max="20" step="0.1" value="3.5" /></label>
+        <label><span>Fin</span><input type="number" id="cfgOff" min="1" max="10" step="0.1" value="1.5" /></label>
+        <button class="btn" id="btnClearEvents">Limpiar</button>
+      </div>
+      <div class="events" id="eventsList"></div>
+    </section>
+
+    <!-- Salud -->
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h2>Salud de la transmisión</h2>
+          <p>Ciclos que llegaron por segundo. Abajo, cada sensor interno: completitud su desfase de calibración frente a los otros dos (se compensa) y su diferencia dinámica.</p>
+        </div>
+      </div>
+      <div class="chart-box short"><canvas id="rateChart"></canvas></div>
+      <div class="table-scroll">
+        <table class="mini">
+          <thead><tr><th>Señal</th><th>Muestreo</th><th>Completitud</th><th>Huecos (10 s)</th><th>Desfase / diferencia</th><th>RMS</th></tr></thead>
+          <tbody id="sensorTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Descarga -->
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h2>Descargar datos</h2>
+          <p>Registros simulados de la estación seleccionada (hay 3 horas de historial).</p>
+        </div>
+      </div>
+      <div class="export">
+        <label><span>Desde</span><input type="datetime-local" id="exStart" step="1" /></label>
+        <label><span>Hasta</span><input type="datetime-local" id="exEnd" step="1" /></label>
+        <label><span>Señal</span><select id="exSensor"><option value="__unit">SHM unificado</option></select></label>
+        <label><span>Resolución</span>
+          <select id="exStep">
+            <option value="0">Todas las muestras</option>
+            <option value="0.1">Promedio cada 0.1 s</option>
+            <option value="1">Promedio cada 1 s</option>
+            <option value="10">Promedio cada 10 s</option>
+            <option value="60">Promedio cada 1 min</option>
+          </select>
+        </label>
+        <div class="quick">
+          <span>Rápido:</span>
+          <button class="chip" data-range="60">Último minuto</button>
+          <button class="chip" data-range="600">10 min</button>
+          <button class="chip" data-range="3600">1 hora</button>
+        </div>
+        <div class="estimate" id="exEstimate">–</div>
+        <div class="progress" id="exProgressBox" hidden>
+          <div class="bar"><i id="exBar"></i></div>
+          <span id="exProgress">–</span>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="btnCsv">Descargar CSV</button>
+          <button class="btn" id="btnXlsx">Descargar Excel</button>
+          <button class="btn danger" id="btnCancel" hidden>Cancelar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tabla -->
+    <section class="card span-2">
+      <div class="card-head">
+        <div>
+          <h2>Todas las estaciones</h2>
+          <p>Haz clic en una fila para ver su detalle.</p>
+        </div>
+        <div class="controls">
+          <label><span>Zona</span><select id="fNet"><option value="">Todas</option><option value="tijuana">Tijuana</option><option value="guerrero">Guerrero</option></select></label>
+          <label><span>Tipo</span><select id="fKind"><option value="">Todos</option><option value="shm">SHM</option><option value="palert">P-Alert</option></select></label>
+          <label><span>Nivel</span><select id="fStatus"><option value="">Todos</option><option value="none">Sin detección</option><option value="verde">Verde</option><option value="amarillo">Amarillo</option><option value="rojo">Rojo</option><option value="off">Sin conexión</option></select></label>
+          <span class="count-pill" id="fCount"></span>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="stack">
+          <thead><tr><th>Estación</th><th>Tipo</th><th>Nivel</th><th>Pico 60 s</th><th>Actual</th><th>Salud</th><th>Última muestra</th><th>Retraso</th><th>Completitud</th><th>Intensidad</th></tr></thead>
+          <tbody id="stationTable"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap footer">
+    <p><b>Red FCITEC-UABC · Simulación:</b> ruido de cada sensor, modo de vibración de cada edificio, pérdida de muestras, retraso de transmisión y sismos con ondas P y S. La atenuación usa una relación simple de demostración, no un modelo calibrado.
+    <b>Unidades:</b> gal = cm/s² (1 g = 981 gal), aceleración dinámica sin gravedad. <b>Epicentros:</b> la red no los calcula; solo se muestran los publicados por fuentes oficiales.</p>
+  </footer>
+
+  <script>
+    // Logotipos: pon los archivos en assets/ (fcitec.svg|png, uabc.svg|png, colaborador.svg|png).
+    // Si no existen, se muestra el nombre en texto y la página se ve igual de bien.
+    document.querySelectorAll('.logo-box[data-logo]').forEach((box) => {
+      const base = box.dataset.logo, exts = ['svg', 'png', 'jpg', 'webp'];
+      const text = box.dataset.text;
+      const showText = () => {
+        if (!text) { box.remove(); return; }
+        box.classList.add('mono');
+        box.textContent = text;
+      };
+      let i = 0;
+      const tryNext = () => {
+        if (i >= exts.length) return showText();
+        const img = new Image();
+        img.alt = text || base;
+        img.onload = () => {
+          box.textContent = '';
+          // Un logotipo horizontal (como el de FCITEC) necesita un recuadro más ancho.
+          if (img.naturalWidth / img.naturalHeight > 1.6) box.classList.add('wide');
+          box.appendChild(img);
+        };
+        img.onerror = () => { i++; tryNext(); };
+        img.src = `./assets/${base}.${exts[i]}`;
+      };
+      tryNext();
+    });
+  </script>
+  <script src="./sim.js" defer></script>
+  <script src="./main.js" defer></script>
+</body>
+</html>
