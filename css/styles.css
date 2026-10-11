@@ -11,6 +11,7 @@ img{max-width:100%}
   --line:#D7DEDC; --line-2:#B9C4C2; --accent:#0E6B7A; --accent-ink:#FFFFFF; --accent-soft:#D5E8EB;
   --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --deemph:#B3BEC2;
   --good:#0ca30c; --warn:#fab219; --crit:#d03b3b;
+  --zI:#4daf4a; --zII:#f781bf; --zIIIa:#a47158; --zIIIb:#377eb8; --zSD:#e5b636;
   --font:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
 }
@@ -73,7 +74,12 @@ main{padding-block:20px 40px;display:flex;flex-direction:column;gap:18px}
 .meter{height:6px;border-radius:3px;background:var(--accent-soft);overflow:hidden}
 .meter i{display:block;height:100%;background:var(--accent);border-radius:3px}
 .mapwrap{position:relative;width:100%;aspect-ratio:760/450;max-width:100%;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2)}
-.mapwrap canvas,.mapwrap svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.mapwrap > canvas,.mapwrap > svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.mapwrap > .lmap{position:absolute;inset:0}
+.mapwrap .empty{z-index:500;background:color-mix(in srgb, var(--surface) 82%, transparent)}
+.leaflet-tooltip.mk-lab{background:transparent;border:0;box-shadow:none;padding:0 2px;font-family:var(--mono);font-size:11px;color:#16212E;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff}
+.leaflet-tooltip.mk-lab:before{display:none}
+.sq-mk{width:14px;height:14px;border:2px solid #FFFFFF;border-radius:2px;box-sizing:border-box}
 .mapwrap .empty{position:absolute;inset:0;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--ink-2)}
 .mlabel{font-family:var(--mono);font-size:11px;fill:var(--ink);paint-order:stroke;stroke:var(--surface-2);stroke-width:3px;stroke-linejoin:round}
 .glabel{font-family:var(--mono);font-size:10px;fill:var(--muted)}

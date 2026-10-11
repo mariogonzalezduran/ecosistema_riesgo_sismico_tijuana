@@ -18,10 +18,10 @@ var PUBLICO = {ninos:'Niñas y niños', jovenes:'Jóvenes', lideres:'Líderes co
 var CFG = window.TABLERO_CFG || null;
 var nf = function(n){ try { return (+n).toLocaleString('es-MX'); } catch (e) { return String(n); } };
 var SOIL = {
-  'I':   {name:'Tipo I',    desc:'Suelo duro con intercalación de roca', c:'--s1'},
-  'II':  {name:'Tipo II',   desc:'Suelo medianamente duro, consolidado', c:'--s2'},
-  'IIIa':{name:'Tipo IIIa', desc:'Aluviones finos jóvenes', c:'--s3'},
-  'IIIb':{name:'Tipo IIIb', desc:'Arrastres gruesos jóvenes', c:'--s3'}
+  'I':   {name:'Tipo I',    desc:'Suelo duro con intercalación de roca', c:'--zI'},
+  'II':  {name:'Tipo II',   desc:'Suelo medianamente duro, consolidado', c:'--zII'},
+  'IIIa':{name:'Tipo IIIa', desc:'Aluviones finos jóvenes', c:'--zIIIa'},
+  'IIIb':{name:'Tipo IIIb', desc:'Arrastres gruesos jóvenes', c:'--zIIIb'}
 };
 var STATUS = {operando:'Operando', instalacion:'En instalación', planeada:'Planeada'};
 var KIND = {suelo:'Suelo', estructura:'Estructura'};
@@ -74,7 +74,9 @@ function bbox(sts){
   else { var nh = w / want, c2 = (b.lat0 + b.lat1) / 2; b.lat0 = c2 - nh / 2; b.lat1 = c2 + nh / 2; }
   return b;
 }
+function emptyMapHTML(){ return '<div class="empty">' + (S.mode === 'loading' ? '<p>Cargando estaciones…</p>' : '<p><b>Aún no hay estaciones registradas.</b><br>Aquí aparecerán por latitud y longitud, con su tipo de suelo y su estado.</p>' + (S.canWrite ? '<button class="btn" data-act="addSt">Agregar la primera estación</button>' : '')) + '</div>'; }
 function mapHTML(o){
+  if (window.L){ var lid = 'lm' + (++LM.seq); LM.cfg[lid] = o; return '<div class="mapwrap"><div class="lmap" id="' + lid + '" role="region" aria-label="' + esc(o.aria) + '"></div>' + (o.stations.filter(hasCoord).length ? '' : emptyMapHTML()) + '</div>'; }
   var W = 760, H = 450, sts = o.stations.filter(hasCoord), b = bbox(sts);
   var X = function(lon){ return (lon - b.lon0) / (b.lon1 - b.lon0) * W; }, Y = function(lat){ return (b.lat1 - lat) / (b.lat1 - b.lat0) * H; };
   var g = '', span = b.lon1 - b.lon0, step = span > 1.5 ? 0.5 : (span > 0.6 ? 0.1 : 0.05), dec = step < 0.1 ? 2 : 1, v;
@@ -115,7 +117,7 @@ function drawFields(){
   });
 }
 function soilLegend(){
-  return '<div class="legend"><span><i class="sw" style="background:var(--s1)"></i>Tipo I</span><span><i class="sw" style="background:var(--s2)"></i>Tipo II</span><span><i class="sw" style="background:var(--s3)"></i>Tipo IIIa y IIIb (ver etiqueta)</span>' +
+  return '<div class="legend"><span><i class="sw" style="background:var(--zI)"></i>Tipo I</span><span><i class="sw" style="background:var(--zII)"></i>Tipo II</span><span><i class="sw" style="background:var(--zIIIa)"></i>Tipo IIIa</span><span><i class="sw" style="background:var(--zIIIb)"></i>Tipo IIIb</span>' +
     '<span><i class="sw" style="background:var(--muted)"></i>Suelo</span><span><i class="sw sq" style="background:var(--muted)"></i>Estructura</span><span>Relleno sólido: operando · tenue: en instalación · hueco: planeada</span></div>';
 }
 function levelLegend(){
@@ -125,7 +127,7 @@ function shakeMap(ev){
   return mapHTML({stations:S.stations, field:true, aria:'Mapa de aceleración interpolada por estación',
     color:function(s){ var v = pgaOf(ev, s); return v == null ? '--deemph' : LEVEL[level(v)].c; },
     label:function(s){ var v = pgaOf(ev, s); return v == null ? '' : fx(v, 3); },
-    tip:function(s){ var v = pgaOf(ev, s); return tipBase(s) + '|PGA: ' + (v == null ? 'sin registro' : fx(v, 3) + ' g · prioridad ' + LEVEL[level(v)].t.toLowerCase()); }});
+    ev:ev, tip:function(s){ var v = pgaOf(ev, s); return tipBase(s) + '|PGA: ' + (v == null ? 'sin registro' : fx(v, 3) + ' g · prioridad ' + LEVEL[level(v)].t.toLowerCase()); }});
 }
 function tipBase(s){ return String(s.name || 'Sin nombre').replace(/\|/g, '/') + '|' + (SOIL[s.soil] ? SOIL[s.soil].name : 'Suelo sin clasificar') + ' · ' + (KIND[s.kind] || '') + (s.kind === 'estructura' && USO[s.uso] ? ' (' + USO[s.uso].toLowerCase() + ')' : '') + '|' + (STATUS[s.status] || ''); }
 
@@ -310,12 +312,33 @@ function vibInit(){
   VIB.map = L.map('vibMap', {scrollWheelZoom:false}).setView(C.vistaInicial.centro, C.vistaInicial.zoom);
   L.tileLayer(C.teselas.url, {attribution:C.teselas.atribucion, maxZoom:C.teselas.zoomMaximo}).addTo(VIB.map);
   L.control.scale({imperial:false}).addTo(VIB.map);
+  VIB.map.createPane('zonas').style.zIndex = 350; VIB.map.createPane('puntos').style.zIndex = 420; VIB.map.createPane('lecturas').style.zIndex = 440;
   VIB.layer = L.layerGroup().addTo(VIB.map);
+  vibCapas();
   $('#vibCtl').addEventListener('click', function(e){ var b = e.target.closest('[data-vv]'); if (!b) return; VIB.v = b.getAttribute('data-vv'); vibDraw(false); });
   vibDraw(false);
   fetch(VIB.base + C.rutaDatos).then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(g){ VIB.feats = (g && g.features || []).filter(function(f){ return f && f.geometry && f.geometry.type === 'Point'; }); vibDraw(true); })
     .catch(function(e){ VIB.err = e && e.message || 'error'; vibDraw(false); });
+}
+
+function vibCapas(){
+  var m = VIB.map, B = 'datos/mapas/';
+  function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  var zc = {'I':cssVar('--zI'), 'II':cssVar('--zII'), 'IIIa':cssVar('--zIIIa'), 'IIIb':cssVar('--zIIIb'), 'Sin datos':cssVar('--zSD')};
+  function get(f){ return fetch(B + f).then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }).catch(function(){ return null; }); }
+  Promise.all([get('zonificacion.geojson'), get('periodos_dominantes.geojson'), get('puntos_sondeo.geojson'), get('escuelas.geojson')]).then(function(d){
+    var ctl = L.control.layers(null, null, {collapsed: window.innerWidth < 760, position:'topright'}).addTo(m);
+    if (d[0]){ var z = L.geoJSON(d[0], {pane:'zonas', style:function(f){ var c = zc[f.properties.zona] || '#999999'; return {color:c, weight:1, fillColor:c, fillOpacity:.45}; },
+        onEachFeature:function(f, l){ l.bindTooltip(el('span', f.properties.zona === 'Sin datos' ? 'Sin datos de zonificación' : 'Suelo tipo ' + f.properties.zona + ' · NTC 2015'), {sticky:true}); }}).addTo(m);
+      ctl.addOverlay(z, 'Zonificación por tipo de suelo (NTC 2015)'); VIB.zonas = true; }
+    ctl.addOverlay(VIB.layer, 'Lecturas de vibración ambiental (proyecto)');
+    function puntos(g, op, tip){ return L.geoJSON(g, {pointToLayer:function(f, ll){ return L.circleMarker(ll, Object.assign({pane:'puntos', weight:1, fillOpacity:1}, op)); }, onEachFeature:function(f, l){ l.bindTooltip(el('span', tip(f.properties))); }}); }
+    if (d[1]) ctl.addOverlay(puntos(d[1], {radius:4, color:'#232323', fillColor:'#e77148'}, function(p){ return 'Estudio de periodos dominantes · ' + (p.ident || 's/i') + ' · periodo ' + (p.periodo_s == null ? 'sin dato' : p.periodo_s + ' s'); }), 'Estudio de periodos dominantes del suelo (' + d[1].features.length + ' puntos)');
+    if (d[2]) ctl.addOverlay(puntos(d[2], {radius:4, color:'#232323', fillColor:'#7d8b8f'}, function(p){ return 'Punto de sondeo ' + (p.id == null ? '' : p.id); }), 'Puntos de sondeo (' + d[2].features.length + ')');
+    if (d[3]) ctl.addOverlay(puntos(d[3], {radius:6, color:'#801119', weight:1.5, fillColor:'#db1e2a'}, function(p){ return p.escuela || 'Escuela'; }), 'Escuelas (' + d[3].features.length + ')');
+    vibDraw(false);
+  });
 }
 function el(tag, txt, cls){ var n = document.createElement(tag); if (txt != null) n.textContent = txt; if (cls) n.className = cls; return n; }
 function vibDraw(fit){
@@ -341,7 +364,7 @@ function vibDraw(fit){
   var bounds = [];
   orden.forEach(function(k){
     var g = grupos[k], c = g[0].geometry.coordinates, val = vibVal(g[0], v), nd = val == null;
-    var m = L.circleMarker([c[1], c[0]], {radius:7, color:'#0F2A4A', weight:1.5, dashArray:nd ? '2 3' : null, fillColor:vibColor(val, v), fillOpacity:1});
+    var m = L.circleMarker([c[1], c[0]], {pane:'lecturas', radius:7, color:'#0F2A4A', weight:1.5, dashArray:nd ? '2 3' : null, fillColor:vibColor(val, v), fillOpacity:1});
     var box = el('div');
     g.forEach(function(f, i){ var p = f.properties || {}; if (i) box.appendChild(el('hr'));
       box.appendChild(el('b', 'Punto ' + (p[C.campos.id] || '—')));
@@ -362,6 +385,7 @@ function vibDraw(fit){
     s.appendChild(document.createTextNode(r + ' · ' + n)); lg.appendChild(s); });
   if (nnd){ var s2 = el('span'); var sw2 = el('i', null, 'vsw nd'); sw2.style.background = C.colorSinDato; s2.appendChild(sw2); s2.appendChild(document.createTextNode('Sin dato · ' + nnd)); lg.appendChild(s2); }
   leg.appendChild(lg);
+  if (VIB.zonas){ var lz = el('div', null, 'vleg'); lz.appendChild(el('b', 'Zonificación NTC 2015')); [['I', '--zI', 'Tipo I'], ['II', '--zII', 'Tipo II'], ['IIIa', '--zIIIa', 'Tipo IIIa'], ['IIIb', '--zIIIb', 'Tipo IIIb'], ['SD', '--zSD', 'Sin datos']].forEach(function(z){ var s3 = el('span'), q = el('i', null, 'sw sq'); q.style.background = 'var(' + z[1] + ')'; q.style.opacity = '.75'; s3.appendChild(q); s3.appendChild(document.createTextNode(z[2])); lz.appendChild(s3); }); leg.appendChild(lz); }
   leg.appendChild(el('p', 'Intervalos provisionales del visor; el color no indica riesgo sísmico. Las lecturas que comparten coordenadas se muestran juntas al seleccionar el punto.', 'src'));
   // tabla
   var t = el('table'), th = el('thead'), tr = el('tr');
@@ -369,7 +393,51 @@ function vibDraw(fit){
   var tbd = el('tbody'); F.slice().sort(function(a, b){ return String((a.properties || {})[C.campos.id]).localeCompare(String((b.properties || {})[C.campos.id])); }).forEach(function(f){ var p = f.properties || {}, r = el('tr');
     [p[C.campos.id], p[C.campos.fecha], p[C.campos.archivo], vibFmt(vibVal(f, 'frecuencia'), C.variables.frecuencia.decimales), vibFmt(vibVal(f, 'periodo'), C.variables.periodo.decimales)].forEach(function(x, i){ var c = el('td', x == null || x === '' ? 'Sin dato' : x); if (i > 2) c.className = 'num'; r.appendChild(c); }); tbd.appendChild(r); });
   t.appendChild(tbd); tb.appendChild(t);
-  src.textContent = 'Fuente: visor de vibración ambiental RMS-ZC-BC (FCITEC-UABC). Mediciones del ' + fechaLarga(fechas[0]) + ' al ' + fechaLarga(fechas[fechas.length - 1]) + '.';
+  src.textContent = 'Fuentes: lecturas del visor de vibración ambiental RMS-ZC-BC (FCITEC-UABC), medidas del ' + fechaLarga(fechas[0]) + ' al ' + fechaLarga(fechas[fechas.length - 1]) + '. Zonificación, periodos dominantes, sondeos y escuelas: capas del proyecto QGIS «Proyecto Tijuana», sin cambios.';
+}
+
+/* ---------- mapas con mapa base de OpenStreetMap (mismo que el visor) ---------- */
+var LM = {seq:0, cfg:{}, maps:[]};
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function tilesCfg(){ var T = window.RMS_CONFIG && window.RMS_CONFIG.teselas; return T || {url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png', atribucion:'&copy; colaboradores de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>', zoomMaximo:19}; }
+function fieldOverlay(m, ev){
+  var pts = points(ev); if (!pts.length) return;
+  var la0 = 1e9, la1 = -1e9, lo0 = 1e9, lo1 = -1e9;
+  pts.forEach(function(p){ la0 = Math.min(la0, p.lat); la1 = Math.max(la1, p.lat); lo0 = Math.min(lo0, p.lon); lo1 = Math.max(lo1, p.lon); });
+  la0 -= .06; la1 += .06; lo0 -= .07; lo1 += .07;
+  var w = 240, h = Math.max(60, Math.round(w * (la1 - la0) / ((lo1 - lo0) * Math.cos((la0 + la1) / 2 * Math.PI / 180))));
+  var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  var ctx = cv.getContext('2d'), img = ctx.createImageData(w, h);
+  var col = {baja:hexRgb(cssVar('--good')), media:hexRgb(cssVar('--warn')), alta:hexRgb(cssVar('--crit'))};
+  for (var j = 0; j < h; j++) for (var i = 0; i < w; i++){
+    var lon = lo0 + (i + .5) / w * (lo1 - lo0), lat = la1 - (j + .5) / h * (la1 - la0), v = idw(lat, lon, pts);
+    if (v == null) continue; var c = col[level(v)], k = (j * w + i) * 4; img.data[k] = c[0]; img.data[k+1] = c[1]; img.data[k+2] = c[2]; img.data[k+3] = 92;
+  }
+  ctx.putImageData(img, 0, 0);
+  L.imageOverlay(cv.toDataURL(), [[la0, lo0], [la1, lo1]], {interactive:false}).addTo(m);
+}
+function initMaps(){
+  LM.maps.forEach(function(m){ m.remove(); }); LM.maps = [];
+  document.querySelectorAll('.lmap').forEach(function(div){
+    var o = LM.cfg[div.id]; if (!o) return; delete LM.cfg[div.id];
+    var T = tilesCfg(), m = L.map(div, {scrollWheelZoom:false}); LM.maps.push(m);
+    L.tileLayer(T.url, {attribution:T.atribucion, maxZoom:T.zoomMaximo}).addTo(m);
+    L.control.scale({imperial:false}).addTo(m);
+    if (o.field) fieldOverlay(m, o.ev);
+    var order = {planeada:0, instalacion:1, operando:2}, b = [];
+    o.stations.filter(hasCoord).sort(function(a, c){ return (order[a.status] || 0) - (order[c.status] || 0); }).forEach(function(s){
+      var c = cssVar(o.color(s)) || '#888888', solid = s.status === 'operando', mid = s.status === 'instalacion', ll = [+s.lat, +s.lon], mk;
+      if (s.kind === 'estructura'){
+        var sq = document.createElement('div'); sq.className = 'sq-mk';
+        sq.style.background = solid ? c : (mid ? c : 'transparent'); if (mid) sq.style.opacity = '.55'; if (!solid) sq.style.borderColor = c;
+        mk = L.marker(ll, {icon:L.divIcon({className:'', html:sq.outerHTML, iconSize:[14, 14]}), title:String(s.name || '')});
+      } else mk = L.circleMarker(ll, {radius:7, color:solid ? '#FFFFFF' : c, weight:2, fillColor:c, fillOpacity:solid ? 1 : (mid ? .4 : 0)});
+      var lab = o.label(s); if (lab) mk.bindTooltip(el('span', lab), {permanent:true, direction:'right', className:'mk-lab', offset:[8, 0]});
+      var box = el('div'); String(o.tip(s)).split('|').forEach(function(t, i){ if (t) box.appendChild(el(i ? 'div' : 'b', t)); });
+      mk.bindPopup(box); mk.addTo(m); b.push(ll);
+    });
+    if (b.length) m.fitBounds(b, {padding:[36, 36], maxZoom:13}); else m.setView([32.49, -116.98], 11);
+  });
 }
 
 /* ---------- red SHM + P-Alert (panel de monitoreo, simulado) ---------- */
@@ -419,6 +487,7 @@ function render(){
   PANELS.forEach(function(pn){ $('#hold').appendChild($('#' + pn.id)); });
   view.innerHTML = V[S.view]();
   drawFields();
+  if (window.L) initMaps();
   PANELS.forEach(function(pn){ var sec = $('#' + pn.id), slot = document.getElementById(pn.slot);
     if (slot && pn.ok()){ slot.appendChild(sec); sec.hidden = false; pn.init(); var mp = pn.map(); if (mp) setTimeout(function(){ mp.invalidateSize(); }, 0); } else sec.hidden = true; });
   if (fid){ var el = document.getElementById(fid); if (el){ if (fval != null) el.value = fval; try { el.focus({preventScroll:true}); } catch (e) {} } }

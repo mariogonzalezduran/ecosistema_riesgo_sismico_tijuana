@@ -12,6 +12,9 @@ css/styles.css                  Estilos (tema claro y oscuro)
 js/config.js                    URL y clave pública de Supabase
 js/app.js                       Lógica del tablero: vistas, mapas, vibración ambiental, contador
 img/favicon.svg, img/marca.svg  Ícono y trazo de acelerograma
+datos/mapas/                    Capas del proyecto QGIS «Proyecto Tijuana» convertidas a GeoJSON, sin cambios:
+                                zonificación NTC 2015 (I, II, IIIa, IIIb, Sin datos), estudio de periodos
+                                dominantes (120 puntos), puntos de sondeo (29) y escuelas (8)
 vibracion/                      Visor de vibración ambiental RMS-ZC-BC (versión 0.3, sin cambios)
   index.html                    Visor completo (búsqueda, filtros, detalle por punto)
   js/config.js                  Ruta de datos, intervalos y colores: el ecosistema también lo usa
@@ -23,6 +26,7 @@ shm/                            Panel de monitoreo de la red SHM + P-Alert (vers
 supabase/001_esquema.sql        Tablas, reglas de acceso y función de visitas
 supabase/002_datos_ejemplo.sql  Datos ficticios marcados como EJEMPLO
 vercel.json, netlify.toml       Configuración para cada servicio
+iniciar-servidor.bat / .sh      Servidor local para probar en tu computadora
 ```
 
 ## Componentes
@@ -33,6 +37,9 @@ Resumen · 1 Riesgo sísmico · 2 Vibración y suelo · 3 Estaciones · 4 Mapas 
 «Vibración y suelo» dibuja las lecturas reales sobre un mapa (colores e intervalos tomados de
 `vibracion/js/config.js`), con resumen, leyenda con conteos y tabla, y enlaza al visor completo
 en `vibracion/index.html`. No interpola ni presenta la frecuencia o el periodo como riesgo.
+El mapa muestra además la zonificación por tipo de suelo y, desde su selector de capas, el estudio
+de periodos dominantes, los puntos de sondeo y las escuelas. Por decisión del proyecto no se
+incluyen las capas interpoladas (IDW) de QGIS.
 
 «Estaciones» incluye la red SHM + P-Alert: mapa de los 9 planteles COBACH previstos, qué hace el
 panel y un botón al panel completo en `shm/index.html`. Ese panel es una simulación: ninguna
@@ -40,12 +47,32 @@ señal proviene de sensores reales. Si cambian los planteles en `shm/sim.js`, ac
 `shm/planteles_tijuana.json`. La versión con datos reales necesita el proxy `api/proxy.js` del
 repositorio del panel en la raíz del sitio (solo funciona en Vercel).
 
-## Probar en tu computadora
+## Probar en tu computadora (servidor local)
 
-Los datos se leen con `fetch`, que no funciona abriendo el archivo con doble clic. Desde esta
-carpeta: `python -m http.server 5500` y abre `http://localhost:5500` (o usa Live Server en VS Code).
+Los datos se leen con `fetch`, que no funciona abriendo `index.html` con doble clic. Hace falta un
+servidor local:
 
-## Publicar
+- **Windows:** doble clic en `iniciar-servidor.bat`. Abre el navegador en `http://localhost:5500`.
+  Para detenerlo, cierra la ventana negra.
+- **Mac o Linux:** en la terminal, dentro de esta carpeta, `./iniciar-servidor.sh`.
+- **VS Code:** extensión Live Server, clic derecho en `index.html` › Open with Live Server.
+
+Los tres necesitan Python (los dos primeros) o VS Code (el tercero). Con el servidor encendido
+puedes abrir el tablero en el celular, en la misma red Wi-Fi, con `http://IP-de-tu-equipo:5500`.
+
+## Compartir por GitHub
+
+1. En github.com crea un repositorio (o usa `ecosistema_riesgo_sismico_tijuana`).
+2. «Add file › Upload files», arrastra **todo el contenido** de esta carpeta (no la carpeta misma)
+   y pulsa «Commit changes». Así `index.html` queda en la raíz del repositorio.
+3. Para tener una dirección pública sin otro servicio: «Settings › Pages», en «Branch» elige
+   `main` y la carpeta `/ (root)`, y pulsa «Save». En uno o dos minutos el sitio queda en
+   `https://TU-USUARIO.github.io/NOMBRE-DEL-REPOSITORIO/`.
+
+El repositorio público deja ver todos los archivos, incluidas las 30 lecturas de vibración y las
+capas de QGIS. Confirma antes que el proyecto autoriza su difusión.
+
+## Publicar en Netlify o Vercel
 
 - **Netlify:** entra a app.netlify.com/drop y arrastra esta carpeta.
 - **Vercel:** sube esta carpeta a un repositorio y en vercel.com/new elige «Import». Framework
